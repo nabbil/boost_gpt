@@ -11,13 +11,12 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, validators
 from wtforms.validators import DataRequired, Email
 
-
 # Replace the values with your PostgreSQL database credentials
 conn = psycopg2.connect(
     host="localhost",
     database="boost_gpt",
     user="boost_gpt",
-    password="Welcome@20@@"
+    password="Workhard7!"
 )
 
 app = Flask(__name__)
@@ -25,17 +24,19 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.secret_key = 'supersecretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://boost_gpt:Workhard7!@localhost/boost_gpt'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+
+
 class User(UserMixin, db.Model):
     __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(200), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
 
 ALLOWED_EXTENSIONS = {'csv'}
@@ -55,10 +56,11 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
+@login_required
 def home():
-    users = User.query.all()
+    users = get_users()
+    print(f"user: {current_user}, user_id: {getattr(current_user, 'id', None)}")
     return render_template('home.html', active='home', home_url=url_for('home'), users_url=url_for('get_users'), users=users, user=current_user)
-
 
 @app.route('/index')
 def index():
@@ -101,18 +103,25 @@ def create_user():
             flash('User created successfully', 'success')
             return redirect(url_for('get_users'))
 
+from flask_login import login_user, logout_user
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and check_password_hash(user.password, form.password.data):
             login_user(user)
-            return redirect(url_for('index'))
+            flash('Logged in successfully.', 'success')
+            return redirect(url_for('home'))
         else:
-            flash('Invalid username or password', 'danger')
-    return render_template('login.html')
+            flash('Invalid username or password.', 'danger')
+
+    return render_template('login.html', form=form)
 
 @app.route('/logout')
 @login_required
@@ -166,6 +175,14 @@ class EditUserForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), validators.Length(min=2, max=25)])
     last_name = StringField('Last Name', validators=[DataRequired(), validators.Length(min=2, max=25)])
     submit = SubmitField('Update User')
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
 
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 def edit_user(user_id):

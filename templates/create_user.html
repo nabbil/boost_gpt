@@ -1,35 +1,29 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Create User</title>
-  </head>
-  <body>
-    <h1>Create User</h1>
-    <form method="POST" action="{{ url_for('create_user') }}">
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
-      <br>
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
-      <br>
-      <label for="role">Role:</label>
-      <select id="role" name="role">
-        <option value="Admin">Admin</option>
-        <option value="Team Member">Team Member</option>
-      </select>
-      <br>
-      <input type="submit" value="Create User">
-    </form>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul class="flashes">
-        {% for category, message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-  </body>
-</html>
+{% extends "app/layout.html" %}
+
+{% block content %}
+  <h1>Create User</h1>
+  <form method="POST" action="{{ url_for('create_user') }}">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <br>
+    <label for="role">Role:</label>
+    <select id="role" name="role">
+      <option value="Admin">Admin</option>
+      <option value="Team Member">Team Member</option>
+    </select>
+    <br>
+    <input type="submit" value="Create User">
+  </form>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+      {% for category, message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+{% endblock %}

@@ -1,9 +1,10 @@
 <!-- templates/login.html -->
-{% extends 'base.html' %}
+{% extends "app/layout.html" %}
 
 {% block content %}
   <h1>Login</h1>
   <form method="POST" action="{{ url_for('login') }}">
+    {{ form.csrf_token }}
     <label for="username">Username:</label>
     <input type="text" id="username" name="username" required>
     <br>

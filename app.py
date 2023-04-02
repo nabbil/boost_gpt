@@ -10,6 +10,9 @@ from forms import UserForm
 from flask_wtf import FlaskForm
 from wtforms import StringField, validators
 from wtforms.validators import DataRequired, Email
+from flask import Flask
+
+app = Flask(__name__, template_folder='templates', static_folder='static')
 
 # Replace the values with your PostgreSQL database credentials
 conn = psycopg2.connect(
@@ -19,8 +22,6 @@ conn = psycopg2.connect(
     password="Workhard7!"
 )
 
-app = Flask(__name__)
-
 app.url_map.strict_slashes = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.secret_key = 'supersecretkey'
@@ -29,8 +30,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
-
 
 class User(UserMixin, db.Model):
     __table_args__ = {'extend_existing': True}
@@ -49,6 +48,7 @@ login_manager.login_view = 'login'
 # class User(db.Model):
 #     ...
 
+
 with app.app_context():
     db.create_all()
 
@@ -60,7 +60,7 @@ def allowed_file(filename):
 def home():
     users = get_users()
     print(f"user: {current_user}, user_id: {getattr(current_user, 'id', None)}")
-    return render_template('home.html', active='home', home_url=url_for('home'), users_url=url_for('get_users'), users=users, user=current_user)
+    return render_template('users.html', active='users', home_url=url_for('home'), users_url=url_for('get_users'), users=users)
 
 @app.route('/index')
 def index():
@@ -95,6 +95,8 @@ def create_user():
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('A user with that username already exists. Please choose a different username.', 'danger')
+        elif not username or not password:
+            flash('Please enter a valid username and password.', 'danger')
         else:
             hashed_password = generate_password_hash(password, method='sha256')
             new_user = User(username=username, password=hashed_password, role=role)
@@ -102,6 +104,7 @@ def create_user():
             db.session.commit()
             flash('User created successfully', 'success')
             return redirect(url_for('get_users'))
+    return render_template('create_user.html', active='create_user', form=form)
 
 from flask_login import login_user, logout_user
 
@@ -114,6 +117,7 @@ def login():
 
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
+        print(f'user: {user}') # Add a print statement to check the value of user
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
             flash('Logged in successfully.', 'success')
@@ -121,6 +125,8 @@ def login():
         else:
             flash('Invalid username or password.', 'danger')
 
+    print(f'form.errors: {form.errors}') # Add a print statement to check form errors
+    print(f'form.is_submitted(): {form.is_submitted()}') # Add a print statement to check if the form has been submitted
     return render_template('login.html', form=form)
 
 @app.route('/logout')
@@ -155,6 +161,7 @@ def signup():
 def get_users():
     users = User.query.all()
     return render_template('users.html', active='users', home_url=url_for('home'), users_url=url_for('get_users'), users=users)
+
 
 @app.route('/update_user/int:id', methods=['GET', 'POST'])
 def update_user(id):

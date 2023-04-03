@@ -1,21 +1,51 @@
-{% extends "app/layout.html" %}
+{% extends "layout.html" %}
 
 {% block content %}
   <h1>Create User</h1>
   <form method="POST" action="{{ url_for('create_user') }}">
+    {{ form.csrf_token }}
+    
     <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
+    {{ form.username }}
+    {% if form.username.errors %}
+      <ul class="errors">
+        {% for error in form.username.errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
     <br>
     <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
+    {{ form.password }}
+    {% if form.password.errors %}
+      <ul class="errors">
+        {% for error in form.password.errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <br>
+    <label for="confirm_password">Confirm Password:</label>
+    {{ form.confirm_password }}
+    {% if form.confirm_password.errors %}
+      <ul class="errors">
+        {% for error in form.confirm_password.errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
     <br>
     <label for="role">Role:</label>
-    <select id="role" name="role">
-      <option value="Admin">Admin</option>
-      <option value="Team Member">Team Member</option>
-    </select>
+    {{ form.role }}
+    {% if form.role.errors %}
+      <ul class="errors">
+        {% for error in form.role.errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
     <br>
-    <input type="submit" value="Create User">
+    {{ form.submit }}
   </form>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
